@@ -1,7 +1,7 @@
 import express from 'express'
 import bodyParser from 'body-parser';
-import routerv1 from './router/routerv1';
-import errorHandlers from './controller/errorhandlers';
+import routerv1 from './router/V1/router.mjs';
+import { errorHandlers } from './controller/V1/errorhandlers.mjs';
 var app = express();
 app.use(function (req, res, next) {
 	res.header('Access-Control-Allow-Origin', '*');

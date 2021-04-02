@@ -1,9 +1,11 @@
 {
   "name": "mini-bank-system",
+  "type": "module",
   "version": "1.0.0",
   "description": "A small project that contains features of a bank-services.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
