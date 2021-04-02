@@ -1,0 +1,24 @@
+{
+  "name": "mini-bank-system",
+  "version": "1.0.0",
+  "description": "A small project that contains features of a bank-services.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adien7368/Mini-Bank-System.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Adien7368/Mini-Bank-System/issues"
+  },
+  "homepage": "https://github.com/Adien7368/Mini-Bank-System#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.7"
+  }
+}
