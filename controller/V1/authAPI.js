@@ -1,6 +1,6 @@
 const { _ } = require('lodash')
 const error = require('restify-errors')
-const { signUpValidation, logInValidation } = require('../../utility/validation')
+const { signUpValidation, logInValidation, transactionValidate, updateTransaction } = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
 
 
@@ -35,18 +35,25 @@ function login(req, res, next){
 
 }
 
-function logout(req, res, next){
-    
+function handleTransaction(req, res, next){
+    var toAccId = _.trim(req.body.toAccountId);
+    var fromAccId = _.trim(req.body.fromAccountId);
+    var balance = _.trim(req.body.balance);
+    transactionValidate(fromAccId, toAccId, balance).then(validation => {
+        if(validation.valid){
+            updateTransaction(fromAccId, toAccId, balance)
+            .then((obj) => {
+                return next(obj);
+            })
+            .catch(err => next(new error.BadRequestError()));
+        } 
+    }).catch(err => {
+        return next(new error.BadRequestError());
+    })
+
 }
 
-function resetPassword(req, res, next){
-    var email = _.trim(req.body.email);
-}
-
-function updatePassword(req, res, next){
-    
-}
 
 
 
-module.exports = {signUp, verify, login};
+module.exports = {signUp, verify, login, handleTransaction};

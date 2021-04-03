@@ -1,6 +1,6 @@
-DROP IF EXISTS users;
+DROP IF EXISTS Users;
 DROP IF EXISTS Accounts;
-CREATE TABLE users (
+CREATE TABLE Users (
     user_id INT GENERATED ALWAYS AS IDENTITY,
     user_name VARCHAR(40),
     user_phone VARCHAR (20),
@@ -19,6 +19,16 @@ CREATE TABLE Accounts (
     created_date DATE,
     other_details VARCHAR(40),
     account_type VARCHAR(10),
+    balance INT NOT NULL DEFAULT 0,
     verification STATUS,
-    user_id INT REFERENCES users(user_id)
+    user_id INT REFERENCES users(user_id),
+    PRIMARY KEY (account_id)
+);
+
+CREATE TABLE Transactions (
+    transaction_id INT GENERATED ALWAYS AS IDENTITY,
+    amount INT NOT NULL,
+    fromAccount INT REFERENCES Accounts(account_id),
+    toAccount INT REFERENCES Accounts(account_id),
+    createdTime TIMESTAMP 
 );

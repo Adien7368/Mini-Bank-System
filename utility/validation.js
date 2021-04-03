@@ -99,5 +99,60 @@ async function logInValidation(email, password) {
 }
 
 
+async function transactionValidate(fromAccId, toAccId, balance){
+    var status = {}
+    if(!fromAccId){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    } else if(!toAccId){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    } else if(!balance){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    }
 
-module.exports = { signUpValidation, logInValidation };
+    return pool.query('select * from accounts where account_id=$1',[fromAccId])
+            .then((res) => {
+                if(res.rows.length > 0 && res.rows[0].balance >= balance) {
+                    return pool.query('select * from accounts where account_id=$1',[toAccId])
+                            .then(res => res.rows.length > 0 ? Promise.resolve({valid: true}):Promise.reject({valid: false, errorMessage: "Account not present"}))
+                            .catch(err => Promise.reject({valid: false, errorMessage: "Account not present"}))
+                } else {
+                    status = {valid: false, errorMessage: 'Insufficient balance or Account not there'};
+                    return Promise.reject(status);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+                status = {valid: false, errorMessage: ''};
+                return Promise.reject(status);
+            });
+}
+
+async function updateTransaction(fromAccId, toAccId, balance) {
+
+    return pool.query('update accounts set balance = balance - $1 where account_id=$2',[balance,fromAccId])
+        .then(() => {
+            return pool.query('update accounts set balance = balance + $1 where account_id=$2',[balance,toAccId])
+                    .then(() => {
+                        return pool.query('insert into transactions (amount, fromAccount, toAccount, createdTime) values ($1, $2, $3, $4)',[balance, fromAccId, toAccId, new Date()])
+                                .then (() => Promise.resolve({code:'success', meesage: 'Transacetion successful'}))
+                                .catch (err => {
+                                    pool.query('update accounts set balance = balance - $1 where account_id=$2',[balance,toAccId]);
+                                    pool.query('update accounts set balance = balance + $1 where account_id=$2',[balance,fromAccId]);
+                                    return Promise.reject();
+                                })
+                    })
+                    .catch(err => {
+                        pool.query('update accounts set balance = balance + $1 where account_id=$2',[balance,fromAccId]);
+                        return Promise.reject();
+                    });
+        })
+        .catch(err => Promise.reject(err))
+
+}
+
+
+
+module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction};
