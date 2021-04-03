@@ -47,8 +47,19 @@ async function signUpValidation(name, phone, username, email, password){
 
 
 async function createUserAndAccount (name, phone, username, email, password) {
-    pool.query(`insert into users (user_name, user_phone, customer_email, username, security_pass, created_date) values ($1,$2,$3,$4,$5,$6)`,[name,phone,email,username,password, new Date()]).then(() => {
-        return Promise.resolve();
+    return pool.query(`insert into users (user_name, user_phone, customer_email, username, security_pass, created_date) values ($1,$2,$3,$4,$5,$6)`,[name,phone,email,username,password, new Date()]).then(() => {
+        return pool.query('select user_id from users where customer_email=$1 limit 1',[email]).then(res => {
+            return pool.query('insert into Accounts (account_name, created_date, other_details, account_type, verification, user_id) values ($1,$2,$3,$4,$5,$6)', 
+                    [name, new Date(), '', 'SAVING', 'PENDING', res.rows[0].user_id])
+                    .then(() => Promise.resolve())
+                    .catch(err => {
+                        pool.query('delete from users where customer_email=$1',[email]);
+                        return Promise.reject(err);
+                    });
+        }).catch(err => {
+            pool.query('delete from users where customer_email=$1',[email]);
+            return Promise.reject(err);
+        })
     }).catch((err) => {
         return Promise.reject(err);
     })

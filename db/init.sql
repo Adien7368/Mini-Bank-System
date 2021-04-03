@@ -15,7 +15,7 @@ CREATE TYPE STATUS AS ENUM ('SUCCESS', 'PENDING');
 
 CREATE TABLE Accounts (
     account_id INT GENERATED ALWAYS AS IDENTITY,
-    account_name VARCHAR(10),
+    account_name VARCHAR(40),
     created_date DATE,
     other_details VARCHAR(40),
     account_type VARCHAR(10),
