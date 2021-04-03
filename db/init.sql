@@ -7,7 +7,7 @@ CREATE TABLE users (
     customer_email VARCHAR(40),
     created_date DATE, 
     username VARCHAR(40),
-    security_pass VARCHAR(40),
+    security_pass VARCHAR(60),
     PRIMARY KEY(user_id)
 );
 

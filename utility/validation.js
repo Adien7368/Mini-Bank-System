@@ -1,4 +1,5 @@
 const { _ } = require('lodash');
+const bcrypt = require('bcrypt');
 const { pool } = require('../db/db_init.js');
 const { isEmailValid } = require('./utils')
 
@@ -25,7 +26,9 @@ async function signUpValidation(name, phone, username, email, password){
         try {
             return pool.query(`select * from users where customer_email=$1`, [email]).then(res => {
                 if(res.rowCount == 0){
-                    return createUserAndAccount(name, phone, username, email, password);
+                    return bcrypt.hash(password, 10)
+                            .then((hash) => createUserAndAccount(name, phone, username, email, hash))
+                            .catch(err => Promise.reject({valid: false, errorMessage: "User password is in wrong format"}));
                 } else {
                     status = {valid: false, errorMessage: "User already exits"};
                     return Promise.reject(status);  
@@ -65,6 +68,36 @@ async function createUserAndAccount (name, phone, username, email, password) {
     })
 }
 
+async function logInValidation(email, password) {
+    var status = { };
+    if(!password){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    } else if(!email){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    } 
+
+    if(isEmailValid(email)) {
+        return pool.query('select * from users where customer_email=$1',[email]).then((res) => {
+            var match =  bcrypt.compareSync(password, res.rows[0].security_pass);
+            if(match){
+                return Promise.resolve();
+            } else {
+                status = {valid: false, errorMessage: "Email is not valid"}
+                return Promise.reject(status);
+            }
+            
+            }).catch(err => {
+                status = {valid: false, errorMessage: "user does not exits"}
+                return Promise.reject(status);
+            });
+    } else {
+        status = {valid: false, errorMessage: "Email is not valid"}
+        return Promise.reject(status);
+    }
+}
 
 
-module.exports = { signUpValidation };
+
+module.exports = { signUpValidation, logInValidation };

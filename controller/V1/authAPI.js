@@ -1,6 +1,6 @@
 const { _ } = require('lodash')
 const error = require('restify-errors')
-const { signUpValidation } = require('../../utility/validation')
+const { signUpValidation, logInValidation } = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
 
 
@@ -19,9 +19,19 @@ function signUp(req, res, next) {
 }   
 
 
+function verify(req, res, next) {
+    
+}
+
 function login(req, res, next){
     var email = _.trim(req.body.email);
-    var password = _.trim(req.body.passsword);
+    var password = _.trim(req.body.password);
+    logInValidation(email, password).then(() => {
+        return next({code: 'success', message: 'Logged in'})
+    }).catch(err => {
+        console.log(err);
+        return next(new error.UnauthorizedError());
+    })
 
 }
 
@@ -39,4 +49,4 @@ function updatePassword(req, res, next){
 
 
 
-module.exports = {signUp};
+module.exports = {signUp, verify, login};
