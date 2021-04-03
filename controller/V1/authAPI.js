@@ -1,6 +1,6 @@
 const { _ } = require('lodash')
 const error = require('restify-errors')
-const { signUpValidation, logInValidation, transactionValidate, updateTransaction, createUserAndAccount } = require('../../utility/validation')
+const { signUpValidation, logInValidation, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId} = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
 
 
@@ -62,6 +62,29 @@ function handleTransaction(req, res, next){
 }
 
 
+function transactionHistory(req, res, next){
+    var id = _.trim(req.body.id);
+    validateAccountId(id)
+    .then(obj => {
+        if(obj.valid){
+            getHistoryJson(id)
+            .then(obj => {
+                return next(obj);
+            })
+            .catch(err => {
+                console.log(err);
+                return next(new error.BadRequestError())
+            });
+        } else {
+            return next(new error.BadRequestError());
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        return next(new error.BadRequestError())
+    });
+}
 
 
-module.exports = {signUp, verify, login, handleTransaction};
+
+module.exports = {signUp, verify, login, handleTransaction, transactionHistory};

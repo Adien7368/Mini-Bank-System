@@ -153,5 +153,32 @@ async function updateTransaction(fromAccId, toAccId, balance) {
 }
 
 
+async function validateAccountId(id){
+    var status = {}
+    if(!id){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    }
 
-module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction, createUserAndAccount};
+    return pool.query('select * from accounts where account_id=$1',[id])
+    .then(obj => {
+        if(obj.rowCount > 0){
+            return Promise.resolve({valid: true, errorMessage: ""});
+        } else {
+            return Promise.reject({valid: false, errorMessage: "No Account with this is id"});
+        }
+    })
+    .catch(err => Promise.reject({valid: false, errorMessage: 'Error in querying', error: err}));
+
+}
+
+async function getHistoryJson(id) {
+    return pool.query('select amount,fromAccount,toAccount,createdTime from transactions where fromAccount=$1 or toAccount=$1',[id])
+    .then(res => {
+        return Promise.resolve({code:'success', values: res.rows});
+    })
+    .catch(err => Promise.reject(err));
+}
+
+
+module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId};

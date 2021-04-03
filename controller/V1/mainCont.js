@@ -1,4 +1,4 @@
-const { signUp, verify, login, handleTransaction } = require('./authAPI')
+const { signUp, verify, login, handleTransaction, transactionHistory } = require('./authAPI')
 
 
 function authControllers(router) {
@@ -6,7 +6,7 @@ function authControllers(router) {
     router.post( '/verification', verify);
     router.post( '/login'     , login);
     router.post( '/transaction', handleTransaction)
-    // router.delete( '/logout'   , logout);
+    router.get( '/history'   , transactionHistory);
     // router.patch( '/resetpass' , resetPassword);
     // router.patch( '/updatePass', updatePassword);
 }
