@@ -11,11 +11,10 @@ function signUp(req, res, next) {
     var password = _.trim(req.body.password);
     var phone = _.trim(req.body.phone);
     console.log(req.body);
-    signUpValidation(name, phone, username, email, password).then(obj => {
-        console.log(obj)
-        return next({code: 'success', message: ''});
+    signUpValidation(name, phone, username, email, password).then(() => {
+        return next({code: 'success', message: 'User Created'});
     }).catch(err => {
-        return next({code: '400', message: ''});
+        return next(new error.InternalServerError());
     });
 }   
 
