@@ -1,3 +1,9 @@
+const dotenv = require('dotenv')
+
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
+
 const config = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -6,4 +12,5 @@ const config = {
     database: process.env.DB_NAME
 }
 
-export default config;
+
+module.exports = { config };

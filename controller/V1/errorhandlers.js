@@ -1,6 +1,6 @@
 
-export const errorHandlers = (err, req, res, next) => {
-    console.log("ErrorHandler....", err.code);
+const errorHandlers = (err, req, res, next) => {
+    console.log("ErrorHandler....", err);
     res.status(CODE[err.code]);
     res.send(err);
 }
@@ -62,3 +62,6 @@ const CODE = {
 	RequesturiTooLarge: 414,
 	success: 200
 };
+
+
+module.exports = {errorHandlers, CODE};

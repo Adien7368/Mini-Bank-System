@@ -1,12 +1,7 @@
-import express from 'express'
-import bodyParser from 'body-parser';
-import routerv1 from './router/V1/router.mjs';
-import { errorHandlers } from './controller/V1/errorhandlers.mjs';
-import dotenv from 'dotenv';
-
-if (process.env.NODE_ENV !== 'production') {
-	dotenv.config();
-  }
+const express  = require('express');
+const bodyParser = require('body-parser');
+const { routerv1 } = require('./router/V1/router')
+const { errorHandlers } = require('./controller/V1/errorhandlers')
 
 var app = express();
 app.use(function (req, res, next) {
@@ -18,7 +13,7 @@ app.use(function (req, res, next) {
 });
 
 // To parse URLEncoded data
-app.use(bodyParser.urlencoded({ extended : false }));
+app.use(bodyParser.urlencoded({ extended : true }));
 // To parse Json data
 app.use(bodyParser.json());
 

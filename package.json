@@ -1,6 +1,5 @@
 {
   "name": "mini-bank-system",
-  "type": "module",
   "version": "1.0.0",
   "description": "A small project that contains features of a bank-services.",
   "main": "app.js",
@@ -24,6 +23,10 @@
     "express": "^4.17.1",
     "lodash": "^4.17.21",
     "nodemon": "^2.0.7",
-    "pg": "^8.5.1"
+    "pg": "^8.5.1",
+    "restify-errors": "^8.0.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0"
   }
 }

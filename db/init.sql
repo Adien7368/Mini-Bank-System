@@ -3,8 +3,8 @@ DROP IF EXISTS Accounts;
 CREATE TABLE users (
     user_id INT GENERATED ALWAYS AS IDENTITY,
     user_name VARCHAR(40),
-    user_phone int,
-    cutomer_email VARCHAR(40),
+    user_phone VARCHAR (20),
+    customer_email VARCHAR(40),
     created_date DATE, 
     username VARCHAR(40),
     security_pass VARCHAR(40),
