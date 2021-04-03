@@ -2,6 +2,9 @@ const { _, forEach } = require('lodash')
 const error = require('restify-errors')
 const { signUpValidation, logInCheck, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, validateUserId, addToVerificationQueue} = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
+const { v4: uuidv4 } = require('uuid');
+const html_to_pdf = require('html-pdf-node');
+const fs = require('fs');
 
 
 function signUp(req, res, next) {
@@ -106,11 +109,12 @@ function generatePDF(req, res, next) {
         if(obj.valid){
             getHistoryJson(obj.user_id)
             .then(obj => {
-                
-                res.pdfFromHTML({
-                    filename: 'transactionhistory.pdf',
-                    htmlContent: toHtml(obj)
-                });
+                var fileName = uuidv4()+".pdf";
+                html_to_pdf.generatePdf({content: toHtml(obj)}, {format: 'A4'})
+                .then(pdfBuffer => {
+                    fs.writeFile('pdfFiles/' + fileName, pdfBuffer, (res) => {});
+                })
+                return next({code: 'success', link: '/genpdf/'+fileName})
             })
             .catch(err => {
                 console.log(err);
@@ -143,4 +147,10 @@ function toHtml(obj){
     return html;
 }
 
-module.exports = {signUp, verify, login, handleTransaction, transactionHistory, generatePDF};
+function handleFileRequest(req, res, next){
+    var filename = req.params.filename;
+    res.contentType("application/pdf");
+    res.sendFile(filename, {root: './pdfFiles'});
+}
+
+module.exports = {signUp, verify, login, handleTransaction, transactionHistory, generatePDF, handleFileRequest};

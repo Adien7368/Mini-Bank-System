@@ -1,9 +1,10 @@
 const express  = require('express');
 const bodyParser = require('body-parser');
 const { routerv1 } = require('./router/V1/router')
-const pdf = require('express-pdf')
 
 var app = express();
+app.use(express.static('pdfFiles'));
+
 app.use(function (req, res, next) {
 	res.header('Access-Control-Allow-Origin', '*');
 	res.header('Access-Control-Allow-Headers', '*');
@@ -16,8 +17,6 @@ app.use(function (req, res, next) {
 app.use(bodyParser.urlencoded({ extended : true }));
 // To parse Json data
 app.use(bodyParser.json());
-// for generating pdf
-app.use(pdf);
 
 app.use("/api/v1", routerv1 , (next) => {next();});
 
