@@ -5,6 +5,7 @@ const { pool } = require('../../db/db_init')
 const { v4: uuidv4 } = require('uuid');
 const html_to_pdf = require('html-pdf-node');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 
 
 function signUp(req, res, next) {
@@ -110,9 +111,37 @@ function generatePDF(req, res, next) {
             getHistoryJson(obj.user_id)
             .then(obj => {
                 var fileName = uuidv4()+".pdf";
-                html_to_pdf.generatePdf({content: toHtml(obj)}, {format: 'A4'})
+                html_to_pdf.generatePdf({content: toHtml(obj)}, {format: 'A4'}).then()
                 .then(pdfBuffer => {
-                    fs.writeFile('pdfFiles/' + fileName, pdfBuffer, (res) => {});
+                    fs.writeFile('pdfFiles/' + fileName, pdfBuffer, (res) => {
+                        const transporter = nodemailer.createTransport({
+                            host: 'smtp.ethereal.email',
+                            port: 587,
+                            auth: {
+                                user: 'ed.green@ethereal.email',
+                                pass: 'zhu7CWaWAkU8XpK9Bj'
+                            }
+                        });
+                        var mailOptions = {
+                            from: 'ed.green@ethereal.email',
+                            to:   email,
+                            subject: "Your bank statement",
+                            text: "There is pdf attachment",
+                            attachments: [
+                                {
+                                    fileName: fileName,
+                                    path: './pdfFiles/'+fileName
+                                }
+                            ]
+                        };
+                          transporter.sendMail(mailOptions, function(error, info){
+                            if(error){
+                                console.log(error);
+                            } else {
+                                console.log(info.response)
+                            }
+                          });
+                    });
                 })
                 return next({code: 'success', link: '/genpdf/'+fileName})
             })
