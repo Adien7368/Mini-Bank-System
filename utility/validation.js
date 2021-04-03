@@ -1,7 +1,9 @@
 const { _ } = require('lodash');
 const bcrypt = require('bcrypt');
 const { pool } = require('../db/db_init.js');
-const { isEmailValid } = require('./utils')
+const { isEmailValid } = require('./utils');
+const { secret } = require('../jwtconfig')
+const jwt = require('jsonwebtoken')
 
 async function signUpValidation(name, phone, username, email, password){
     var status = { };
@@ -74,7 +76,8 @@ async function logInCheck(email, password) {
             if(res.rowCount > 0) {
                 var match =  bcrypt.compareSync(password, res.rows[0].security_pass);
                 if(match){
-                    return Promise.resolve({code: 'success', message: 'Logged In!'});
+                    const token = jwt.sign({ sub: res.rows[0].user_id }, secret, { expiresIn: '1h' });
+                    return Promise.resolve({code: 'success', message: 'Logged In!', token: token});
                 } else {
                     status = {valid: false, errorMessage: "Password is worng"}
                     return Promise.reject(status);

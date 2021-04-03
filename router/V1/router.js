@@ -1,15 +1,33 @@
 const express = require('express');
-const { authControllers, featureController } = require('../../controller/V1/mainCont');
+const error = require('restify-errors');
+const jwt = require('jsonwebtoken');
+const { signUp, verify, login, handleTransaction, transactionHistory, generatePDF, handleFileRequest } = require('../../controller/V1/controller');
+const { secret } = require('../../jwtconfig');
 
-var routerv1 = express.Router();
+var router = express.Router();
 
-authControllers(routerv1);
+router.post( '/login'     , login);
 
-routerv1.use(function(req, res, next) {
-    
-    next();
+router.use(function(req, res, next) {
+    if('authorization' in req.headers){
+        jwt.verify(req.headers['authorization'], secret, (err, decoded) => {
+            if(err){
+                return res.send(new error.UnauthorizedError());
+            } 
+            return next();
+        })
+    } else {
+        res.send(new error.UnauthorizedError());
+    }
 });
 
-featureController(routerv1);
+router.post( '/register'   , signUp);
+router.post( '/verification', verify);
+router.post( '/transaction', handleTransaction);
+router.get( '/history'   , transactionHistory);
+router.get( '/hitoryPDF', generatePDF);
+router.get( '/genpdf/:filename', handleFileRequest);
 
-module.exports = { routerv1 };
+
+
+module.exports = { router };
