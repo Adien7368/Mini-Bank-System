@@ -7,6 +7,7 @@ const { secret } = require('../../jwtconfig');
 var router = express.Router();
 
 router.post( '/login'     , login);
+router.post( '/register'   , signUp);
 
 router.use(function(req, res, next) {
     if('authorization' in req.headers){
@@ -22,7 +23,6 @@ router.use(function(req, res, next) {
     }
 });
 
-router.post( '/register'   , signUp);
 router.post( '/verification', verify);
 router.post( '/transaction', handleTransaction);
 router.get( '/history'   , transactionHistory);
