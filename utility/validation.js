@@ -110,6 +110,9 @@ async function transactionValidate(fromAccId, toAccId, balance){
     } else if(!balance){
         status = {valid: false, errorMessage: ""}
         return Promise.reject(status);
+    } else if (fromAccId == toAccId) {
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
     }
 
     return pool.query('select * from accounts where account_id=$1',[fromAccId])
