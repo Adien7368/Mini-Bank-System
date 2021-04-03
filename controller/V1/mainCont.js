@@ -3,15 +3,14 @@ const { signUp, verify, login, handleTransaction, transactionHistory } = require
 
 function authControllers(router) {
     router.post( '/register'   , signUp);
-    router.post( '/verification', verify);
     router.post( '/login'     , login);
+}
+
+function featureController(router){
+    router.post( '/verification', verify);
     router.post( '/transaction', handleTransaction)
     router.get( '/history'   , transactionHistory);
-    // router.patch( '/resetpass' , resetPassword);
-    // router.patch( '/updatePass', updatePassword);
 }
 
 
-
-
-module.exports = { authControllers };
+module.exports = { authControllers, featureController };

@@ -6,19 +6,19 @@ const { isEmailValid } = require('./utils')
 async function signUpValidation(name, phone, username, email, password){
     var status = { };
     if(!name){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "Name is missing"}
         return Promise.reject(status);
     } else if(!phone){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "Phone no. is missing"}
         return Promise.reject(status);
     } else if(!username){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "Username is missing"}
         return Promise.reject(status);
     } else if(!email){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "email is missing"}
         return Promise.reject(status);
     } else if(!password){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "passoword is missing"}
         return Promise.reject(status);
     }
 
@@ -32,10 +32,7 @@ async function signUpValidation(name, phone, username, email, password){
                 status = {valid: false, errorMessage: "User already exits"};
                 return Promise.reject(status);  
             }
-        }).catch(err => {
-            status = {valid: false, errorMessage: "Internal server error"};
-            return Promise.reject(status);   
-        });
+        }).catch(err => Promise.reject(err));
     } else {
         status = {valid: false, errorMessage: "Email is not valid"}
         return Promise.reject(status);
@@ -44,8 +41,6 @@ async function signUpValidation(name, phone, username, email, password){
 
 
 async function createUserAndAccount (name, phone, username, email, password) {
-
-
     return pool.query(`insert into users (user_name, user_phone, customer_email, username, security_pass, created_date) values ($1,$2,$3,$4,$5,$6)`,[name,phone,email,username,password, new Date()]).then(() => {
         return pool.query('select user_id from users where customer_email=$1 limit 1',[email]).then(res => {
             return pool.query('insert into Accounts (account_name, created_date, other_details, account_type, verification, user_id) values ($1,$2,$3,$4,$5,$6)', 
@@ -64,29 +59,32 @@ async function createUserAndAccount (name, phone, username, email, password) {
     })
 }
 
-async function logInValidation(email, password) {
+async function logInCheck(email, password) {
     var status = { };
     if(!password){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "Password is empty"}
         return Promise.reject(status);
     } else if(!email){
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "email is empty"}
         return Promise.reject(status);
     } 
 
     if(isEmailValid(email)) {
         return pool.query('select * from users where customer_email=$1',[email]).then((res) => {
-            var match =  bcrypt.compareSync(password, res.rows[0].security_pass);
-            if(match){
-                return Promise.resolve();
+            if(res.rowCount > 0) {
+                var match =  bcrypt.compareSync(password, res.rows[0].security_pass);
+                if(match){
+                    return Promise.resolve({code: 'success', message: 'Logged In!'});
+                } else {
+                    status = {valid: false, errorMessage: "Password is worng"}
+                    return Promise.reject(status);
+                }
             } else {
-                status = {valid: false, errorMessage: "Email is not valid"}
+                status = {valid: false, errorMessage: 'no user with this email'}
                 return Promise.reject(status);
             }
-            
             }).catch(err => {
-                status = {valid: false, errorMessage: "user does not exits"}
-                return Promise.reject(status);
+                return Promise.reject(err);
             });
     } else {
         status = {valid: false, errorMessage: "Email is not valid"}
@@ -204,4 +202,4 @@ function addToVerificationQueue(email){
 }
 
 
-module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue};
+module.exports = { signUpValidation, logInCheck , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue};
