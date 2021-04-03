@@ -131,7 +131,7 @@ async function transactionValidate(fromAccId, toAccId, balance){
 
 async function updateTransaction(fromAccId, toAccId, balance) {
 
-    return pool.query('update accounts set balance = balance - $1 where account_id=$2',[balance,fromAccId])
+    return pool.query('updateusers set  accounts set balance = balance - $1 where account_id=$2',[balance,fromAccId])
         .then(() => {
             return pool.query('update accounts set balance = balance + $1 where account_id=$2',[balance,toAccId])
                     .then(() => {
@@ -180,5 +180,28 @@ async function getHistoryJson(id) {
     .catch(err => Promise.reject(err));
 }
 
+async function verifyUserId(email) {
+    var status = {}
+    if(!email){
+        status = {valid: false, errorMessage: ""}
+        return Promise.reject(status);
+    }
+    return pool.query('select * from users where customer_email=$1',[email])
+            .then(res => {
+                if(res.rowCount > 0)
+                    return Promise.resolve({valid:true, errorMessage: ""});
+                else 
+                    return Promise.reject({valid: false, errorMessage: "user id does not exits"})
+            })
+            .catch(err => Promise.reject(err));
+}
 
-module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId};
+function addToVerificationQueue(email){
+    pool.query('select user_id from users where customer_email=$1 limit 1',[email])
+    .then(res => {
+        pool.query('update accounts set verification = $1 where user_id = $2', ['SUCCESS',res.rows[0].user_id]);
+    })
+}
+
+
+module.exports = { signUpValidation, logInValidation , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue};

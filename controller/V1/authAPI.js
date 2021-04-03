@@ -1,6 +1,6 @@
 const { _ } = require('lodash')
 const error = require('restify-errors')
-const { signUpValidation, logInValidation, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId} = require('../../utility/validation')
+const { signUpValidation, logInValidation, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue} = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
 
 
@@ -28,7 +28,19 @@ function signUp(req, res, next) {
 
 
 function verify(req, res, next) {
-    
+    let email = _.trim(req.body.email);
+    verifyUserId(email)
+    .then(res => {
+        if(res.valid){
+            addToVerificationQueue(email);
+            return next({code: 'success', message: 'Verification triggered'});
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        return next(new error.BadRequestError());
+    })
+
 }
 
 function login(req, res, next){
