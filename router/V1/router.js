@@ -15,7 +15,7 @@ router.use(function(req, res, next) {
             if(err){
                 return res.send(new error.UnauthorizedError());
             } 
-            res.user_id = decoded.sub;
+            req.user_id = decoded.sub;
             return next();
         })
     } else {

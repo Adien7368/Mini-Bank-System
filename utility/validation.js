@@ -96,43 +96,51 @@ async function logInCheck(email, password) {
 }
 
 
-async function transactionValidate(fromAccId, toAccId, balance){
+async function transactionValidate(fromUserId, toEmailId, balance){
     var status = {}
-    if(!fromAccId){
-        status = {valid: false, errorMessage: ""}
+    if(!fromUserId){
+        status = {valid: false, errorMessage: "No from User Id"}
         return Promise.reject(status);
-    } else if(!toAccId){
-        status = {valid: false, errorMessage: ""}
+    } else if(!toEmailId){
+        status = {valid: false, errorMessage: "No Email Id "}
         return Promise.reject(status);
     } else if(!balance){
-        status = {valid: false, errorMessage: ""}
-        return Promise.reject(status);
-    } else if (fromAccId == toAccId) {
-        status = {valid: false, errorMessage: ""}
+        status = {valid: false, errorMessage: "No balance"}
         return Promise.reject(status);
     }
-
-    return pool.query('select * from accounts where account_id=$1',[fromAccId])
-            .then((res) => {
-                if(res.rows.length > 0 && res.rows[0].balance >= balance) {
-                    return pool.query('select * from accounts where account_id=$1',[toAccId])
-                            .then(res => res.rows.length > 0 ? Promise.resolve({valid: true}):Promise.reject({valid: false, errorMessage: "Account not present"}))
-                            .catch(err => Promise.reject({valid: false, errorMessage: "Account not present"}))
+    return pool.query('select account_id,balance from accounts where user_id=$1 limit 1',[fromUserId])
+            .then(res => {
+                if(res.rowCount > 0 && res.rows[0].balance >= balance){
+                    return pool.query('select * from users where customer_email=$1 limit 1',[toEmailId])
+                            .then(res1 => {
+                                if(res1.rowCount > 0){
+                                    return pool.query('select * from accounts where user_id=$1 limit 1',[res1.rows[0].user_id])
+                                            .then(res3 => {
+                                                if(res3.rowCount > 0 && res.rows[0].account_id != res3.rows[0].account_id){
+                                                    return Promise.resolve({valid: true, errorMessage: "", fromAccId: res.rows[0].account_id, toAccId: res3.rows[0].account_id})
+                                                } else {
+                                                    status = {valid: false, errorMessage: 'Recipient Account not there'};
+                                                    return Promise.reject(status);
+                                                }
+                                            })
+                                            .catch(err => Promise.reject({valid: false, errorMessage:"", error:err}));
+                                } else {
+                                    status = {valid: false, errorMessage: 'Recipient User not there'};
+                                    return Promise.reject(status);
+                                }
+                            })
+                            .catch(err => Promise.reject({valid:false, errorMessage: "", error: err}));
                 } else {
                     status = {valid: false, errorMessage: 'Insufficient balance or Account not there'};
                     return Promise.reject(status);
                 }
             })
-            .catch(err => {
-                console.log(err);
-                status = {valid: false, errorMessage: ''};
-                return Promise.reject(status);
-            });
+            .catch(err => Promise.reject({valid: false, errorMessage: "", error: err}));
 }
 
 async function updateTransaction(fromAccId, toAccId, balance) {
 
-    return pool.query('updateusers set  accounts set balance = balance - $1 where account_id=$2',[balance,fromAccId])
+    return pool.query('update accounts set balance = balance - $1 where account_id=$2',[balance,fromAccId])
         .then(() => {
             return pool.query('update accounts set balance = balance + $1 where account_id=$2',[balance,toAccId])
                     .then(() => {

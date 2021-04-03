@@ -36,10 +36,12 @@ function signUp(req, res, next) {
 function verify(req, res, next) {
     let email = _.trim(req.body.email);
     validateUserId(email)
-    .then(res => {
-        if(res.valid){
+    .then(obj => {
+        if(obj.valid && obj.user_id == req.user_id){
             addToVerificationQueue(email);
             return next({code: 'success', message: 'Verification triggered'});
+        } else {
+            return next(new error.BadRequestError());
         }
     })
     .catch(err => {
@@ -62,18 +64,22 @@ function login(req, res, next){
 }
 
 function handleTransaction(req, res, next){
-    var toAccId = _.trim(req.body.toAccountId);
-    var fromAccId = _.trim(req.body.fromAccountId);
+    var toEmailId = _.trim(req.body.toEmailId);
+    var fromUserId = req.user_id;
     var balance = _.trim(req.body.balance);
-    transactionValidate(fromAccId, toAccId, balance).then(validation => {
+    transactionValidate(fromUserId, toEmailId, balance).then(validation => {
         if(validation.valid){
-            updateTransaction(fromAccId, toAccId, balance)
+            updateTransaction(validation.fromAccId, validation.toAccId, balance)
             .then((obj) => {
                 return next(obj);
             })
-            .catch(err => next(new error.BadRequestError()));
+            .catch(err => {
+                console.log(err);
+                return next(new error.BadRequestError())
+            });
         } 
     }).catch(err => {
+        console.log(err);
         return next(new error.BadRequestError());
     })
 
@@ -84,7 +90,7 @@ function transactionHistory(req, res, next){
     var email = _.trim(req.body.email);
     validateUserId(email)
     .then(obj => {
-        if(obj.valid){
+        if(obj.valid && obj.user_id == req.user_id){
             getHistoryJson(obj.user_id)
             .then(obj => {
                 return next(obj);
@@ -107,7 +113,7 @@ function generatePDF(req, res, next) {
     var email = _.trim(req.body.email);
     validateUserId(email)
     .then(obj => {
-        if(obj.valid){
+        if(obj.valid && obj.user_id == req.user_id){
             getHistoryJson(obj.user_id)
             .then(obj => {
                 var fileName = uuidv4()+".pdf";
