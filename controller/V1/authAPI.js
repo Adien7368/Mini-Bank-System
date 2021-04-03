@@ -1,6 +1,6 @@
-const { _ } = require('lodash')
+const { _, forEach } = require('lodash')
 const error = require('restify-errors')
-const { signUpValidation, logInCheck, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue} = require('../../utility/validation')
+const { signUpValidation, logInCheck, transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, validateUserId, addToVerificationQueue} = require('../../utility/validation')
 const { pool } = require('../../db/db_init')
 
 
@@ -31,7 +31,7 @@ function signUp(req, res, next) {
 
 function verify(req, res, next) {
     let email = _.trim(req.body.email);
-    verifyUserId(email)
+    validateUserId(email)
     .then(res => {
         if(res.valid){
             addToVerificationQueue(email);
@@ -77,11 +77,11 @@ function handleTransaction(req, res, next){
 
 
 function transactionHistory(req, res, next){
-    var id = _.trim(req.body.id);
-    validateAccountId(id)
+    var email = _.trim(req.body.email);
+    validateUserId(email)
     .then(obj => {
         if(obj.valid){
-            getHistoryJson(id)
+            getHistoryJson(obj.user_id)
             .then(obj => {
                 return next(obj);
             })
@@ -99,6 +99,48 @@ function transactionHistory(req, res, next){
     });
 }
 
+function generatePDF(req, res, next) {
+    var email = _.trim(req.body.email);
+    validateUserId(email)
+    .then(obj => {
+        if(obj.valid){
+            getHistoryJson(obj.user_id)
+            .then(obj => {
+                
+                res.pdfFromHTML({
+                    filename: 'transactionhistory.pdf',
+                    htmlContent: toHtml(obj)
+                });
+            })
+            .catch(err => {
+                console.log(err);
+                return next(new error.BadRequestError())
+            });
+        } else {
+            return next(new error.BadRequestError());
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        return next(new error.BadRequestError())
+    });
+}
 
+function toHtml(obj){
+    var html = '<table>';
+    if (obj.values.length > 0){
+        html += '<tr>';
+        for (var key in obj.values[0]){html += '<th>'+key+'</th>';}
+        html += '</tr>';
+    }
 
-module.exports = {signUp, verify, login, handleTransaction, transactionHistory};
+    for (var j = 0; j< obj.values.length; ++j){
+        html += '<tr>';
+        for (var key in obj.values[j]){html += '<th>'+obj.values[j][key]+'</th>';}
+        html += '</tr>';
+    };
+    html += '</table>';
+    return html;
+}
+
+module.exports = {signUp, verify, login, handleTransaction, transactionHistory, generatePDF};

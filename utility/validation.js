@@ -170,24 +170,32 @@ async function validateAccountId(id){
 
 }
 
-async function getHistoryJson(id) {
-    return pool.query('select amount,fromAccount,toAccount,createdTime from transactions where fromAccount=$1 or toAccount=$1',[id])
-    .then(res => {
-        return Promise.resolve({code:'success', values: res.rows});
+async function getHistoryJson(userid) {
+    return pool.query('select account_id from accounts where user_id=$1 limit 1',[userid]).then(res => {
+        if (res.rowCount > 0){
+            return pool.query('select amount,fromAccount,toAccount,createdTime from transactions where fromAccount=$1 or toAccount=$1',[res.rows[0].account_id])
+            .then(res => {
+                return Promise.resolve({code:'success', values: res.rows});
+            })
+            .catch(err => Promise.reject(err));
+        } else {
+            return Promise.reject({errorMessage: "No account for a user Id"});
+        }
     })
     .catch(err => Promise.reject(err));
+    
 }
 
-async function verifyUserId(email) {
+async function validateUserId(email) {
     var status = {}
     if(!email){
         status = {valid: false, errorMessage: ""}
         return Promise.reject(status);
     }
-    return pool.query('select * from users where customer_email=$1',[email])
+    return pool.query('select * from users where customer_email=$1 limit 1',[email])
             .then(res => {
                 if(res.rowCount > 0)
-                    return Promise.resolve({valid:true, errorMessage: ""});
+                    return Promise.resolve({valid:true, errorMessage: "", user_id: res.rows[0].user_id});
                 else 
                     return Promise.reject({valid: false, errorMessage: "user id does not exits"})
             })
@@ -202,4 +210,4 @@ function addToVerificationQueue(email){
 }
 
 
-module.exports = { signUpValidation, logInCheck , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, verifyUserId, addToVerificationQueue};
+module.exports = { signUpValidation, logInCheck , transactionValidate, updateTransaction, createUserAndAccount, getHistoryJson, validateAccountId, validateUserId, addToVerificationQueue};
