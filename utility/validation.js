@@ -23,29 +23,26 @@ async function signUpValidation(name, phone, username, email, password){
 
     if(isEmailValid(email)){
         try {
-            pool.query(`select * from users where customer_email=$1`, [email], (err, res) => {
-                if(err) {
-                    console.log("Error Query ", err);
-                    status = {valid: false, errorMessage: ""};
-                    return Promise.reject(status);
-                }
-
+            return pool.query(`select * from users where customer_email=$1`, [email]).then(res => {
                 if(res.rowCount == 0){
-                    // createUserAndAccount(name, phone, username, email, password).then((obj) => {
-                    //     console.log("Created User", obj);
-                    //     status = {valid: true, errorMessage: ""};
-                    //     return Promise.resolve(status);
-                    // }).catch((err) => {
-                    //     console.log("Error in user creation", err);
-                    //     status = {valid: false, errorMessage: ""};
-                    //     return Promise.reject(status);
-                    // })
+                    createUserAndAccount(name, phone, username, email, password).then((obj) => {
+                        console.log("Created User", obj);
+                        status = {valid: true, errorMessage: ""};
+                        return Promise.resolve(status);
+                    }).catch((err) => {
+                        console.log("Error in user creation", err);
+                        status = {valid: false, errorMessage: ""};
+                        return Promise.reject(status);
+                    })
                 } else {
                     status = {valid: false, errorMessage: ""};
-                    return Promise.reject('status');
+                    return Promise.reject(status);  
                 }
-                
-            })
+            }).catch(err => {
+                console.log("Error Query ", err);
+                status = {valid: false, errorMessage: ""};
+                return Promise.reject(status);   
+            });
         } catch (e){
             console.log("Sign up.. error.. ", e);
             status = {valid: false, errorMessage: ""}
